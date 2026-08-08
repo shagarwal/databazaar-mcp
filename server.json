@@ -1,0 +1,27 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.shagarwal/databazaar",
+  "description": "Agent-first data marketplace — AI agents search, purchase, and sell datasets via MCP.",
+  "repository": {
+    "url": "https://github.com/shagarwal/agentdatamarketplace",
+    "source": "github"
+  },
+  "version": "1.3.0",
+  "websiteUrl": "https://databazaar.io",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "databazaar-mcp",
+      "version": "1.3.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://api.databazaar.io/mcp"
+    }
+  ]
+}

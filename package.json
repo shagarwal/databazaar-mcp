@@ -1,0 +1,48 @@
+{
+  "name": "databazaar-mcp",
+  "version": "1.3.0",
+  "mcpName": "io.github.shagarwal/databazaar",
+  "description": "DataBazaar MCP Server — AI agent access to the data marketplace. Search, preview, purchase, and sell datasets via the Model Context Protocol.",
+  "keywords": ["mcp", "model-context-protocol", "agent", "databazaar", "data", "marketplace", "claude", "ai", "datasets"],
+  "homepage": "https://databazaar.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shagarwal/agentdatamarketplace.git",
+    "directory": "packages/mcp"
+  },
+  "license": "MIT",
+  "author": "DataBazaar",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "type": "module",
+  "bin": {
+    "databazaar-mcp": "dist/index.js",
+    "databazaar-mcp-http": "dist/http.js"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist/**/*",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.0",
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "open": "^10.1.0",
+    "zod": "^3.23.0",
+    "zod-to-json-schema": "^3.24.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "tsx": "^4.0.0",
+    "@types/node": "^20.0.0",
+    "vitest": "^1.6.0"
+  }
+}
