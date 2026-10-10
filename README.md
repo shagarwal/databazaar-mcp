@@ -331,6 +331,8 @@ are developed separately. Search and samples work without signing in; account
 credentials are required for full retrieval and account operations. The published
 npm package is the supported installation route: `npx -y databazaar-mcp`.
 
-The checked-in `server.json` is the registry record for this release. Historical
-registry versions may still reference the private development repository; use
-this public repository for the client source and issue tracker.
+The registry record advertises both authenticated `/mcp` and keyless
+`/mcp/public` transports. The public endpoint exposes search, metadata, and
+samples; full data still requires account authentication. Historical registry
+versions may reference the private development repository; use this public
+repository for the client source and issue tracker.

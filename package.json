@@ -1,6 +1,6 @@
 {
   "name": "databazaar-mcp",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "mcpName": "io.github.shagarwal/databazaar",
   "description": "Search and preview datasets publicly via MCP. Sign in to retrieve full data, including free datasets.",
   "keywords": [
