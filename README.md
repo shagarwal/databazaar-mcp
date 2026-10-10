@@ -50,6 +50,23 @@ npx databazaar-mcp
 Search and samples work without credentials. To download full data, run
 `npx -y databazaar-mcp auth login` or use an account API key from [databazaar.io/operator/keys](https://databazaar.io/operator/keys).
 
+## Quick Start (Docker — stdio)
+
+For a local stdio container, build from this repository and run with stdin open:
+
+```bash
+docker build -t databazaar-mcp .
+docker run --rm -i databazaar-mcp
+```
+
+No credentials are needed to start the server, inspect its tools, search, or
+preview samples. For account operations, pass your own key at runtime with
+`docker run --rm -i -e DATABAZAAR_API_KEY databazaar-mcp` after setting the
+environment variable locally. Do not put credentials in the Dockerfile.
+
+The container runs the stdio entry point. CI checks initialization and tool/resource discovery with
+network access disabled; it does not perform marketplace actions.
+
 ## Quick Start (Hosted HTTP — long-lived service)
 
 ```bash

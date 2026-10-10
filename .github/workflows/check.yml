@@ -17,3 +17,5 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm test
       - run: npm run build
+      - run: docker build --tag databazaar-mcp:check .
+      - run: node scripts/check-container.mjs databazaar-mcp:check
