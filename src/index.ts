@@ -10,6 +10,7 @@
 //   npx databazaar-mcp auth status                  — show auth status
 //
 // Configure: set DATABAZAAR_API_KEY env var (and optionally DATABAZAAR_API_URL, DATABAZAAR_BUDGET_LIMIT_USD)
+import { SERVER_VERSION } from './version.js'
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import {
@@ -28,6 +29,7 @@ import {
   loadStoredToken,
 } from './oauth-client.js'
 import { discoveryTools } from './tools/discovery.js'
+import { bountyTools } from './tools/bounties.js'
 import { purchaseTools } from './tools/purchase.js'
 import { deliveryTools } from './tools/delivery.js'
 import { messagingTools } from './tools/messaging.js'
@@ -92,7 +94,7 @@ async function authStatus(): Promise<void> {
 async function startServer(): Promise<void> {
   const config = getConfig()
   const server = new Server(
-    { name: 'databazaar', version: '1.2.0' },
+    { name: 'databazaar', version: SERVER_VERSION },
     { capabilities: { tools: {}, resources: {} } }
   )
 
@@ -100,6 +102,7 @@ async function startServer(): Promise<void> {
   const allTools = {
     ...discoveryTools(config),
     ...purchaseTools(config),
+    ...bountyTools(config),
     ...deliveryTools(config),
     ...messagingTools(config),
     ...sellerTools(config),

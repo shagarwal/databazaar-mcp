@@ -15,6 +15,7 @@
 //   "url": "http://localhost:8788/mcp"  (or your hosted URL)
 //
 // The stdio transport (databazaar-mcp) keeps working unchanged.
+import { SERVER_VERSION } from './version.js'
 import { createServer, type IncomingMessage } from 'node:http'
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
@@ -24,8 +25,9 @@ import {
   ListResourcesRequestSchema,
   ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js'
-import { getConfig, type McpConfig } from './client.js'
+import { getConfig, httpRequestConfig, type McpConfig } from './client.js'
 import { discoveryTools } from './tools/discovery.js'
+import { bountyTools } from './tools/bounties.js'
 import { purchaseTools } from './tools/purchase.js'
 import { deliveryTools } from './tools/delivery.js'
 import { messagingTools } from './tools/messaging.js'
@@ -107,18 +109,12 @@ async function main() {
       return
     }
 
-    // Per-request config: use Bearer token from Authorization header if present,
-    // falling back to the server-level config (env var or stored OAuth token).
-    let config: McpConfig = defaultConfig
-    const authHeader = req.headers['authorization']
-    if (authHeader?.startsWith('Bearer ')) {
-      const token = authHeader.slice(7)
-      config = { ...defaultConfig, apiKey: token }
-    }
+    const config = httpRequestConfig(defaultConfig, req.headers.authorization)
 
     const allTools = {
       ...discoveryTools(config),
       ...purchaseTools(config),
+    ...bountyTools(config),
       ...deliveryTools(config),
       ...messagingTools(config),
       ...sellerTools(config),
@@ -128,7 +124,7 @@ async function main() {
     const resources = getResources(config)
 
     const server = new Server(
-      { name: 'databazaar', version: '1.2.0' },
+      { name: 'databazaar', version: SERVER_VERSION },
       { capabilities: { tools: {}, resources: {} } }
     )
 
@@ -169,25 +165,35 @@ async function main() {
     })
 
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined })
-    await server.connect(transport)
-    await transport.handleRequest(req, res, await readBody(req))
+    try {
+      const body = req.method === 'POST' ? await readBody(req) : undefined
+      await server.connect(transport)
+      res.on('close', () => { void server.close().catch(() => {}) })
+      await transport.handleRequest(req, res, body)
+    } catch (error) {
+      if (!res.headersSent) res.writeHead((error as { statusCode?: number }).statusCode ?? 400, { 'Content-Type':'application/json' })
+      res.end(JSON.stringify({ error:'Invalid MCP request' }))
+      await server.close().catch(() => {})
+    }
   })
 
-  httpServer.listen(port, () => {
+  httpServer.listen(port, process.env.DATABAZAAR_MCP_HOST ?? '127.0.0.1', () => {
     console.error(`DataBazaar MCP server running (streamable HTTP) on port ${port}`)
     console.error(`MCP endpoint: http://localhost:${port}/mcp`)
     console.error(`Health check: http://localhost:${port}/health`)
   })
 }
 
-// Read the full request body as a Buffer
-function readBody(req: IncomingMessage): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = []
-    req.on('data', (chunk: Buffer) => chunks.push(chunk))
-    req.on('end', () => resolve(Buffer.concat(chunks)))
-    req.on('error', reject)
-  })
+// Bound the body before parsing; the SDK expects a parsed JSON-RPC message.
+async function readBody(req: IncomingMessage): Promise<unknown> {
+  const chunks: Buffer[] = []
+  let size = 0
+  for await (const chunk of req) {
+    size += chunk.length
+    if (size > 1024 * 1024) throw Object.assign(new Error('Body too large'), { statusCode:413 })
+    chunks.push(chunk)
+  }
+  return JSON.parse(Buffer.concat(chunks).toString('utf8'))
 }
 
 main().catch(console.error)

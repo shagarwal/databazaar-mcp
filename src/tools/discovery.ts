@@ -21,7 +21,7 @@ export const discoveryTools = (config: McpConfig): Record<string, ToolDef> => ({
         'Filter by category: geographic, pricing, sensor, images, text, financial, scientific, social, retail, other'
       ),
       max_price: z.number().optional().describe('Maximum price in USD — omit to include all prices'),
-      min_quality_score: z.number().min(0).max(10).optional().describe('Minimum quality score (0-10)'),
+      min_quality_score: z.number().min(0).max(100).optional().describe('Minimum assessed sample structure score (0-100); unassessed listings are excluded. See https://databazaar.io/quality for the rubric and limitations.'),
       pricing_type: z.enum(['buy_it_now', 'auction', 'hybrid', 'free']).optional(),
       limit: z.number().int().min(1).max(50).default(10),
     }),
