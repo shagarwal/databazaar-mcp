@@ -167,7 +167,7 @@ describe('deviceAuthFlow', () => {
   it('succeeds after one authorization_pending + one approved poll', async () => {
     let callCount = 0
 
-    global.fetch = vi.fn().mockImplementation((url: string, opts?: RequestInit) => {
+    global.fetch = vi.fn().mockImplementation(function (url: string, opts?: RequestInit) {
       const body = opts?.body?.toString() ?? ''
 
       // Device authorization request
@@ -214,7 +214,7 @@ describe('deviceAuthFlow', () => {
   })
 
   it('throws on access_denied', async () => {
-    global.fetch = vi.fn().mockImplementation((url: string) => {
+    global.fetch = vi.fn().mockImplementation(function (url: string) {
       if (url.includes('/oauth/device')) {
         return Promise.resolve({
           ok: true,

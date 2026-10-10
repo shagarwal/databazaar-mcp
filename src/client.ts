@@ -79,3 +79,9 @@ export async function apiCall<T>(
   }
   return res.json() as Promise<T>
 }
+
+// HTTP callers must supply their own credential. Server-local env/config tokens
+// belong to the stdio operator and must never be inherited by remote requests.
+export function httpRequestConfig(defaults: McpConfig, authorization?: string): McpConfig {
+  return { ...defaults, apiKey: authorization?.startsWith('Bearer ') ? authorization.slice(7) : '' }
+}

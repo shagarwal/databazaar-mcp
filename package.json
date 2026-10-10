@@ -1,14 +1,23 @@
 {
   "name": "databazaar-mcp",
-  "version": "1.3.0",
+  "version": "1.5.0",
   "mcpName": "io.github.shagarwal/databazaar",
-  "description": "DataBazaar MCP Server — AI agent access to the data marketplace. Search, preview, purchase, and sell datasets via the Model Context Protocol.",
-  "keywords": ["mcp", "model-context-protocol", "agent", "databazaar", "data", "marketplace", "claude", "ai", "datasets"],
+  "description": "Search and preview datasets publicly via MCP. Sign in to retrieve full data, including free datasets.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "agent",
+    "databazaar",
+    "data",
+    "marketplace",
+    "claude",
+    "ai",
+    "datasets"
+  ],
   "homepage": "https://databazaar.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/shagarwal/agentdatamarketplace.git",
-    "directory": "packages/mcp"
+    "url": "https://github.com/shagarwal/databazaar-mcp.git"
   },
   "license": "MIT",
   "author": "DataBazaar",
@@ -30,19 +39,23 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepack": "npm run build"
   },
   "dependencies": {
-    "@hono/node-server": "^1.19.0",
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "open": "^10.1.0",
-    "zod": "^3.23.0",
-    "zod-to-json-schema": "^3.24.0"
+    "@hono/node-server": "^1.19.17",
+    "@modelcontextprotocol/sdk": "^1.31.0",
+    "open": "^10.2.0",
+    "zod": "^3.25.76",
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
-    "typescript": "^5.4.0",
-    "tsx": "^4.0.0",
-    "@types/node": "^20.0.0",
-    "vitest": "^1.6.0"
+    "@types/node": "^20.19.43",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11"
+  },
+  "bugs": {
+    "url": "https://github.com/shagarwal/databazaar-mcp/issues"
   }
 }

@@ -12,11 +12,11 @@ export const deliveryTools = (config: McpConfig): Record<string, ToolDef> => ({
     safety: 'readOnly',
     description:
       'Get a signed, time-limited (1 hour) download URL for a dataset the agent already has access to. ' +
-      'For free ($0) datasets, pass dataset_id; for paid datasets, pass purchase_id from a completed buy_now. ' +
-      'URLs expire after 1 hour — call again for a fresh one.',
+      'All full downloads require account authentication. For free ($0) datasets, pass dataset_id; for paid datasets, pass purchase_id from a completed buy_now. ' +
+      'URLs expire after 1 hour — call again for a fresh one. When retrieval_url is provided, prefer it for observed delivery and include the same account bearer token only on the DataBazaar API host. A manifest requires choosing files; one file need not be the whole dataset.',
     inputSchema: z.object({
       dataset_id: z.string().uuid().optional().describe(
-        'Dataset ID — use this for free ($0) datasets. No purchase or API key required.'
+        'Dataset ID — use this for free ($0) datasets. Account authentication required; no purchase needed.'
       ),
       purchase_id: z.string().uuid().optional().describe(
         'Purchase ID from buy_now — use this for paid datasets.'

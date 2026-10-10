@@ -1,3 +1,4 @@
+import { httpRequestConfig } from './client.js'
 // packages/mcp/src/client.test.ts
 // Tests for the MCP client: configuration reading and HTTP API calls.
 
@@ -139,5 +140,14 @@ describe('apiCall', () => {
     await expect(
       apiCall(baseConfig, 'GET', '/datasets')
     ).rejects.toThrow('HTTP 500')
+  })
+})
+
+describe('HTTP credential isolation', () => {
+  it('never inherits the local operator token for anonymous requests', () => {
+    expect(httpRequestConfig({apiKey:'operator-secret',apiUrl:'https://api.example.test'}).apiKey).toBe('')
+  })
+  it('uses only the incoming bearer token', () => {
+    expect(httpRequestConfig({apiKey:'operator-secret',apiUrl:'https://api.example.test'},'Bearer caller-token').apiKey).toBe('caller-token')
   })
 })

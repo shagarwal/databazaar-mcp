@@ -14,10 +14,32 @@ MCP server for [DataBazaar](https://databazaar.io) — the data marketplace wher
 
 ## Quick Start (Claude.ai — remote connector)
 
-DataBazaar runs as a remote MCP server at `https://api.databazaar.io/mcp`.
+For public discovery, connect to **`https://api.databazaar.io/mcp/public`** using
+Streamable HTTP with no authentication. It exposes `search_datasets`, `get_dataset`,
+`preview_sample`. Full downloads (including free data), purchases, private
+history, and writes require the authenticated endpoint.
+
+Run a public search → sample preview example with Python 3 (no packages):
+
+```bash
+curl -fsS --max-time 20 https://databazaar.io/examples/first-retrieval.py -o first-retrieval.py
+python3 first-retrieval.py --mcp
+```
+
+Expected: `success: true`, `scope: sample_only`, sample rows, and elapsed seconds.
+This does not measure a full retrieval.
+Without `--mcp`, the same example uses REST. See [the guide](https://databazaar.io/agent#quickstart).
+
+For full datasets (even free ones) and account operations, DataBazaar runs an authenticated remote MCP server at `https://api.databazaar.io/mcp`.
 Claude.ai discovers OAuth via the standard RFC 8414 metadata document and
 self-registers as a client via RFC 7591 Dynamic Client Registration — no
 manual setup beyond clicking "Authorize" in the popup.
+
+After signing up and authorizing the agent, call `get_download_url` with `dataset_id`.
+For the Python full-data check, set `DATABAZAAR_API_KEY` in the environment and run
+`python3 first-retrieval.py --download` (add `--mcp` for the authenticated transport).
+It validates all 11 rows and times retrieval. Account setup is required first and
+sample timings must not be reported as end-to-end onboarding success.
 
 ## Quick Start (stdio — Claude Desktop / Cursor)
 
@@ -25,12 +47,13 @@ manual setup beyond clicking "Authorize" in the popup.
 npx databazaar-mcp
 ```
 
-Requires a DataBazaar API key. Get one at [databazaar.io/operator/keys](https://databazaar.io/operator/keys).
+Search and samples work without credentials. To download full data, run
+`npx -y databazaar-mcp auth login` or use an account API key from [databazaar.io/operator/keys](https://databazaar.io/operator/keys).
 
 ## Quick Start (Hosted HTTP — long-lived service)
 
 ```bash
-DATABAZAAR_API_KEY=dbz_live_... databazaar-mcp-http
+npx --package databazaar-mcp databazaar-mcp-http
 # Listens on port 8788 by default
 # MCP endpoint: POST http://localhost:8788/mcp
 # Health check: GET  http://localhost:8788/health
@@ -42,9 +65,9 @@ Set these environment variables before running:
 
 | Variable | Required | Description |
 |---|---|---|
-| `DATABAZAAR_API_KEY` | Yes | Your API key (`dbz_live_...`) |
+| `DATABAZAAR_API_KEY` | For full downloads/account tools | Your API key (`dbz_live_...`) |
 | `DATABAZAAR_API_URL` | No | Override API endpoint (default: `https://api.databazaar.io`) |
-| `DATABAZAAR_BUDGET_LIMIT_USD` | No | Max spend per session in USD |
+| `DATABAZAAR_BUDGET_LIMIT_USD` | No | Budget hint for the client; configure enforced purchase limits on your account API key |
 | `DATABAZAAR_MCP_PORT` | No | HTTP transport port (default: `8788`) |
 
 ## Claude Desktop / Cursor Setup (stdio)
@@ -56,10 +79,7 @@ Add to your MCP config (`~/Library/Application Support/Claude/claude_desktop_con
   "mcpServers": {
     "databazaar": {
       "command": "npx",
-      "args": ["databazaar-mcp"],
-      "env": {
-        "DATABAZAAR_API_KEY": "dbz_live_your_key_here"
-      }
+      "args": ["-y", "databazaar-mcp"]
     }
   }
 }
@@ -67,11 +87,11 @@ Add to your MCP config (`~/Library/Application Support/Claude/claude_desktop_con
 
 ## Hosted HTTP Transport Setup
 
-Run `databazaar-mcp-http` as a long-lived process (e.g. on Railway or Docker):
+Run `databazaar-mcp-http` as a long-lived process. Each HTTP caller supplies its own Bearer account credential; the server never lends an environment credential to callers. For managed account authorization, use https://api.databazaar.io/mcp.
 
 ```bash
 # Start the HTTP MCP server
-DATABAZAAR_API_KEY=dbz_live_... DATABAZAAR_MCP_PORT=8788 npx databazaar-mcp-http
+DATABAZAAR_MCP_PORT=8788 npx --package databazaar-mcp databazaar-mcp-http
 
 # Configure your agent framework to connect via HTTP:
 # URL: http://your-host:8788/mcp
@@ -200,7 +220,7 @@ pages above are the source of truth for current contact addresses.
 3. (PUT file bytes to the returned signed URL)
 4. confirm_upload(dataset_id, full_data_path)
 5. get_listing_status(dataset_id)  → poll until sample ready
-6. publish_listing(dataset_id)
+6. publish_listing(dataset_id, tos_confirmed=true, listing_terms_version="2026-10-09")
 ```
 
 ## Releasing a new version
@@ -269,10 +289,48 @@ Invariants to preserve on every release:
 - [npm package page](https://www.npmjs.com/package/databazaar-mcp)
 - [Registry listing](https://registry.modelcontextprotocol.io/v0/servers?search=databazaar)
 
----
+## Tested workflows and integrations
 
-## Repository note
+- [Export DeepSearchQA to CSV](https://databazaar.io/guides/deepsearchqa-csv?utm_source=npm&utm_campaign=mcp-readme)
+- [Inspect historical stock bars](https://databazaar.io/guides/stock-bars-analysis?utm_source=npm&utm_campaign=mcp-readme)
+- [MCP, AI SDK and LangChain examples](https://databazaar.io/integrations?utm_source=npm&utm_campaign=mcp-readme)
 
-This repository mirrors the published [`databazaar-mcp`](https://www.npmjs.com/package/databazaar-mcp)
-npm package. Primary development happens in the DataBazaar monorepo; releases
-land here in sync with npm versions. Issues and feature requests are welcome.
+`min_quality_score` uses **0–100** in this release. It measures sample structure, not customer ratings or factual accuracy. See the [published rubric](https://databazaar.io/quality).
+
+Full downloads always require a signed-in account, including free data. Public discovery is available through the local server without a token or the hosted `/mcp/public` endpoint.
+
+Source and issues: https://github.com/shagarwal/databazaar-mcp. Marketplace feedback: https://databazaar.io/feedback.
+
+### Listing source and reuse terms
+
+Before publishing, provide `documentation.source_name` through `create_listing` or
+`update_listing`. Name the original source or creator; a source URL is optional.
+Coverage dates may use `documentation.coverage_status: "not_applicable"`.
+`documentation.update_frequency` optionally describes whether this is a fixed
+snapshot or receives updates, and whether later versions are included.
+
+`license` and `documentation.license_url` are optional custom reuse terms. If both
+are blank, accepting [the listing terms](https://databazaar.io/legal/terms#dataset-reuse)
+grants commercial use, modification, redistribution, and model training without
+attribution under DataBazaar Open Use. Access charges still apply. Only confirm
+`tos_confirmed: true` and `listing_terms_version: "2026-10-09"` with the supplier's
+authorization. The same acceptance is required when changing live reuse terms.
+Older listings without recorded acceptance remain unspecified, not automatically open.
+
+## Build and test this public client
+
+```bash
+npm install
+npm test
+npm run build
+node dist/index.js
+```
+
+This repository mirrors the released MCP client. The marketplace API and web app
+are developed separately. Search and samples work without signing in; account
+credentials are required for full retrieval and account operations. The published
+npm package is the supported installation route: `npx -y databazaar-mcp`.
+
+The checked-in `server.json` is the registry record for this release. Historical
+registry versions may still reference the private development repository; use
+this public repository for the client source and issue tracker.
